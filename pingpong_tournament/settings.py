@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os # zz
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'tournament',
-    'django_extensions',
+    'django_extensions', # zz
+    'corsheaders', # zz
 ]
 
 MIDDLEWARE = [
@@ -52,7 +53,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', #zz
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+] #zz
+
+#CORS_ALLOW_ALL_ORIGINS = True #zz
 
 ROOT_URLCONF = 'pingpong_tournament.urls'
 
@@ -124,8 +132,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Répertoire de destination pour collectstatic
+STATIC_URL = 'static/' # z
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  #ww # Répertoire de destination pour collectstatic
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

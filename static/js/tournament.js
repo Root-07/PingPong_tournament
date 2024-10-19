@@ -37,14 +37,24 @@ function fetchTournaments() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ player_id: playerId })
+      body: JSON.stringify({ player_id: playerId }) // Assure-toi que 'player_id' est correct
     })
-      .then(response => response.json())
-      .then(data => {
-        alert(data.message || 'Erreur lors de la participation au tournoi.');
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erreur lors de la participation au tournoi.');
+        }
+        return response.json();
       })
-      .catch(error => console.error('Erreur:', error));
-  }
+      .then(data => {
+        alert(data.message || 'Participation réussie au tournoi.');
+        fetchTournamentDetails(tournamentId); // Recharger les détails après avoir rejoint
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la participation au tournoi.');
+      });
+}
+  
   
   // Charger la liste des tournois au démarrage
   fetchTournaments();

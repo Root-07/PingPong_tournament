@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Player, Tournament, Match, TournamentPlayer
@@ -22,14 +23,19 @@ class TournamentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def start_tournament(self, request, pk=None):
         tournament = self.get_object()
-        if tournament.players.count() == tournament.max_players:
+        player_count = tournament.players.count()
+
+        if player_count != tournament.max_players:
+            return Response({'message': f'Tournament requires exactly {tournament.max_players} players to start'}, status=400)
+
+        if player_count % 2 != 0:
+            return Response({'message': 'Number of players must be even to start the tournament'}, status=400)
             # Créer les matchs du premier tour
-            self.create_first_round_matches(tournament)
-            tournament.status = 'ongoing'
-            tournament.save()
-            return Response({'message': 'Tournament started successfully'})
-        else:
-            return Response({'message': 'Not enough players to start the tournament'}, status=400)
+        self.create_first_round_matches(tournament)
+        tournament.status = 'ongoing'
+        tournament.save()
+        return Response({'message': 'Tournament started successfully'})
+       
     
     # Créer les matchs du premier tour (par exemple, quart de finale)
     def create_first_round_matches(self, tournament):
@@ -48,13 +54,21 @@ class TournamentViewSet(viewsets.ModelViewSet):
     def join(self, request, pk=None):
         tournament = self.get_object()
         player_id = request.data.get('player_id')
-        player = Player.objects.get(id=player_id)
 
-        if tournament.players.count() < tournament.max_players:
-            TournamentPlayer.objects.create(player=player, tournament=tournament)
-            return Response({'message': 'Player joined successfully'})
-        else:
+        if tournament.players.count() >= tournament.max_players:
             return Response({'message': 'Tournament is full'}, status=400)
+    
+        try:
+            player = Player.objects.get(id=player_id)
+        except Player.DoesNotExist:
+            return Response({'message': 'Player does not exist'}, status=404)
+
+        if TournamentPlayer.objects.filter(player=player, tournament=tournament).exists():
+            return Response({'message': 'Player is already in the tournament'}, status=400)
+
+        TournamentPlayer.objects.create(player=player, tournament=tournament)
+        return Response({'message': 'Player joined successfully'})
+
 
     # Action pour générer des matchs du tour suivant
     @action(detail=True, methods=['post'])
@@ -67,6 +81,9 @@ class TournamentViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Not all matches have been completed'}, status=400)
 
         winners = [match.winner for match in matches]
+        if len(winners) % 2 != 0:
+            return Response({'message': 'The number of winners must be even'}, status=400)
+        
         tournament.current_round += 1
         for i in range(0, len(winners), 2):
             Match.objects.create(
@@ -89,8 +106,14 @@ class MatchViewSet(viewsets.ModelViewSet):
     def set_winner(self, request, pk=None):
         match = self.get_object()
         winner_id = request.data.get('winner_id')
-        winner = Player.objects.get(id=winner_id)
-
+        try:
+            winner = Player.objects.get(id=winner_id)
+        except Player.DoesNotExist:
+            return Response({'message': 'Player does not exist'}, status=404)
+        if winner not in [match.player1, match.player2]:
+            return Response({'message': 'Winner must be a participant in the match'}, status=400)
+        
         match.winner = winner
+        match.played_at = timezone.now()
         match.save()
         return Response({'message': 'Winner set successfully'})

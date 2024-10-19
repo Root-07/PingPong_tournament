@@ -1,11 +1,13 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
 # Modele Joueur
 class Player(models.Model):
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    # email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -17,6 +19,7 @@ class Tournament(models.Model):
     players = models.ManyToManyField(Player, through='TournamentPlayer')
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='waiting') # waiting, ongoing, finished
+    current_round = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name
@@ -25,7 +28,20 @@ class Tournament(models.Model):
 class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    joined_at = models.DateTimeField(auto_now_add=True)
+    # joined_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ('player', 'tournament')
+
+    def clean(self):
+        # Vérifier le nombre de joueurs déjà inscrits au tournoi
+        if self.tournament.tournamentplayer_set.count() >= 8:
+            raise ValidationError('Un tournoi ne peut pas avoir plus de 8 joueurs.')
+
+    def save(self, *args, **kwargs):
+        # Appeler la méthode clean avant de sauvegarder l'objet
+        self.clean()
+        super().save(*args, **kwargs)
+
 
 # Modele Match
 class Match(models.Model):

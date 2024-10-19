@@ -5,7 +5,7 @@ from .models import Player, Tournament, Match
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = '__all__'  # ou liste des champs spécifiques
+        fields = ['id', 'name', 'email']  # ou liste des champs spécifiques
 
 # Serializer pour le modèle Tournament
 class TournamentSerializer(serializers.ModelSerializer):
