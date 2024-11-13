@@ -23,11 +23,20 @@ class TournamentViewSet(viewsets.ModelViewSet):
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
 
-    # Créer un tournoi
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
 
-    # @action(detail=True, methods=['get'])
+    # Créer un tournoi et print message de succès
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        print('Tournament created successfully')
+        return response
+
+
+    # supprimer un tournoi et print message de succès
+    # def destroy(self, request, *args, **kwargs):
+    #     response = super().destroy(request, *args, **kwargs)
+    #     print('Tournament deleted successfully')
+    #     return response
+
 
     @action(detail=True, methods=['post'])
     def start_tournament(self, request, pk=None):

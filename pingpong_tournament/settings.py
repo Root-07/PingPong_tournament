@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'corsheaders', # zz
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -56,11 +57,11 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', #zz
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-] #zz
+# CORS_ALLOWED_ORIGINS = [
+#     'http://127.0.0.1:5500',
+# ] #zz
 
-#CORS_ALLOW_ALL_ORIGINS = True #zz
+CORS_ALLOW_ALL_ORIGINS = True #zz
 
 ROOT_URLCONF = 'pingpong_tournament.urls'
 
@@ -133,10 +134,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/' # z
-#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  #ww # Répertoire de destination pour collectstatic
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  #ww # Répertoire de destination pour collectstatic
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
