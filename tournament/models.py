@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 # Modele Joueur
 class Player(models.Model):
     name = models.CharField(max_length=100) # Nom du joueur
-    email = models.EmailField(unique=True) # Adresse email
+    # email = models.EmailField(default='default@example.com') # Adresse email
 
 
     def __str__(self):
@@ -15,6 +15,7 @@ class Player(models.Model):
 # Modele Tournoi
 class Tournament(models.Model):
     name = models.CharField(max_length=100 ) # Nom du tournoi
+    creator = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='created_tournaments', null=True, blank=True)  # Le joueur qui crée le tournoi
     max_players = models.IntegerField(default=8) # Nombre maximum de joueurs
     players = models.ManyToManyField(Player, through='TournamentPlayer', related_name='tournaments')  # Accesseur inverse pour les joueurs
     created_at = models.DateTimeField(auto_now_add=True) # Date de création du tournoi

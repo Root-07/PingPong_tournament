@@ -3,6 +3,7 @@ import random
 from rest_framework import viewsets
 from django.utils import timezone
 from rest_framework.decorators import action
+from rest_framework import status
 from rest_framework.response import Response
 from .models import Player, Tournament, Match, TournamentPlayer
 from .serializers import PlayerSerializer, TournamentSerializer, MatchSerializer
@@ -23,12 +24,43 @@ class TournamentViewSet(viewsets.ModelViewSet):
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
 
+    def perform_create(self, serializer):
+        # Récupérer l'ID du créateur du tournoi
+        creator_id = self.request.data.get('creator_id', None)
 
-    # Créer un tournoi et print message de succès
+        if not creator_id:
+            creator = Player.objects.first()  # Choisir le premier joueur disponible
+            if creator:
+                tournament = serializer.save(creator=creator)  # Créer le tournoi avec le créateur
+                tournament.players.add(creator)  # Ajouter le créateur comme premier joueur
+                self.add_player_to_tournament(creator, tournament)  # Ajouter le créateur au tournoi
+            else:
+                return Response({"detail": "Aucun joueur disponible."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            try:
+                creator = Player.objects.get(id=creator_id)
+                tournament = serializer.save(creator=creator)  # Créer le tournoi avec le créateur
+                tournament.players.add(creator)  # Ajouter le créateur comme premier joueur
+                self.add_player_to_tournament(creator, tournament)  # Ajouter le créateur au tournoi
+            except Player.DoesNotExist:
+                return Response({"detail": "Le créateur spécifié n'existe pas."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def add_player_to_tournament(self, player, tournament):
+        """Ajoute un joueur à un tournoi."""
+        # Vérifier si le joueur est déjà dans le tournoi
+        if not TournamentPlayer.objects.filter(player=player, tournament=tournament).exists():
+            TournamentPlayer.objects.create(player=player, tournament=tournament)
+            print(f'Joueur {player.name} ajouté au tournoi {tournament.name}.')
+
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        print('Tournament created successfully')
-        return response
+        # Utilisation de `perform_create` pour la création
+        return super().create(request, *args, **kwargs)
+
+    # Créer un tournoi et avec un joueur qui va cree print message de succès
+    # def create(self, request, *args, **kwargs):
+    #     response = super().create(request, *args, **kwargs)
+    #     print('Tournament created successfully')
+    #     return response
 
 
     # supprimer un tournoi et print message de succès
